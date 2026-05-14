@@ -1,4 +1,6 @@
 ---
+title: "SKILL"
+---
 name: project_doc_creator
 description: 项目文档生成器 - 根据用户需求生成结构清晰、可直接粘贴到飞书文档使用的项目文档。
 author: Zoey Li
