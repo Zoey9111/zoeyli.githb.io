@@ -1,5 +1,6 @@
-[SKILL.md](https://github.com/user-attachments/files/27757187/SKILL.md)
 ---
+layout: default
+title: competitor_analysis_pro
 name: competitor_analysis_pro
 description: 企业竞品分析助手 - 帮助产品经理求职者深度分析目标公司竞争格局，挖掘产品机会点，为面试做准备。
 author: AI Assistant
