@@ -1,3 +1,6 @@
+---
+title: "SKILL"
+---
 [SKILL.md](https://github.com/user-attachments/files/27751738/SKILL.md)
 ---
 name: prd_writer
