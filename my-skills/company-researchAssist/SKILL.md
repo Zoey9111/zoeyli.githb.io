@@ -1,5 +1,7 @@
 ---
-title: "SKILL"
+layout: default
+title: My Skills
+permalink: /skill
 ---
 name: company-researchAssist
 description: 深度企业调研助手，帮助求职者进行目标公司的系统性调研，辅助面试准备和求职决策。报告以Markdown格式输出，可直接复制到飞书、Notion等在线文档使用。
