@@ -1,3 +1,6 @@
+---
+title: "SKILL"
+---
 [SKILL.md](https://github.com/user-attachments/files/27751579/SKILL.md)
 ---
 name: competitor_analysis_pro
