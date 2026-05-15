@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>一日三餐 - 女性健康管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: #FFF9F7;
+            color: #333;
+            line-height: 1.6;
+            overflow: hidden;
+        }
+
+        /* App容器 */
+        .app-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 顶部导航栏 */
+        .app-header {
+            background: linear-gradient(135deg, #E91E63 0%, #F48FB1 100%);
+            color: white;
+            padding: 16px 20px;
+            padding-top: calc(16px + env(safe-area-inset-top));
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(233, 30, 99, 0.2);
+            position: relative;
+            z-index: 100;
+        }
+
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .header-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-icon::before {
+            content: '🍽';
+            font-size: 16px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: calc(60px + env(safe-area-inset-bottom));
+        }
+
+        /* 页面视图 */
+        .page-view {
+            display: none;
+            min-height: 100%;
+        }
+
+        .page-view.active {
+            display: block;
+        }
+
+        /* 首页 - 今日概览 */
+        .home-page {
+            padding: 20px;
+        }
+
+        .greeting-card {
+            background: linear-gradient(135deg, #FFE4E1 0%, #FCE4EC 100%);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .greeting-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #E91E63;
+            margin-bottom: 8px;
+        }
+
+        .greeting-subtitle {
+            color: #7E57C2;
+            font-size: 0.95rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #E91E63;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #9E9E9E;
+            margin-top: 4px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .action-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .action-card:active {
+            transform: scale(0.98);
+        }
+
+        .action-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 24px;
+        }
+
+        .action-icon.orange {
+            background: linear-gradient(135deg, #FFECB3 0%, #FFE082 100%);
+        }
+
+        .action-icon.purple {
+            background: linear-gradient(135deg, #E1BEE7 0%, #CE93D8 100%);
+        }
+
+        .action-content h4 {
+            color: #333;
+            font-size: 0.95rem;
+            margin-bottom: 2px;
+        }
+
+        .action-content p {
+            color: #9E9E9E;
+            font-size: 0.8rem;
+        }
+
+        .today-meals {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        .meal-timeline {
+            position: relative;
+        }
+
+        .meal-item {
+            display: flex;
+            align-items: flex-start;
+            padding-bottom: 20px;
+            position: relative;
+        }
+
+        .meal-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 40px;
+            bottom: 0;
+            width: 2px;
+            background: #E0E0E0;
+        }
+
+        .meal-time-dot {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #FCE4EC 0%, #F8BBD9 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            color: #E91E63;
+            font-weight: 600;
+            flex-shrink: 0;
+            margin-right: 14px;
+            z-index: 1;
+        }
+
+        .meal-content {
+            flex: 1;
+            background: #FFF9F7;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .meal-image {
+            width: 100%;
+            height: 80px;
+            background: linear-gradient(135deg, #FFECB3 0%, #FFE082 100%);
+            position: relative;
+        }
+
+        .meal-image::before {
+            content: '🍳';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+        }
+
+        .meal-info {
+            padding: 10px;
+        }
+
+        .meal-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .meal-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.85rem;
+        }
+
+        .meal-tag {
+            background: #E8F5E9;
+            color: #2E7D32;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+        }
+
+        .meal-desc {
+            color: #757575;
+            font-size: 0.75rem;
+        }
+
+        /* 记录页面 */
+        .record-page {
+            padding: 20px;
+        }
+
+        .record-form {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .form-label.required::after {
+            content: ' *';
+            color: #F44336;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            background: #FFF9F7;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #E91E63;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            font-size: 1rem;
+            min-height: 80px;
+            resize: none;
+            transition: border-color 0.3s ease;
+            background: #FFF9F7;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #E91E63;
+        }
+
+        .photo-upload-area {
+            border: 2px dashed #E0E0E0;
+            border-radius: 12px;
+            padding: 40px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+            background: #FFF9F7;
+        }
+
+        .photo-upload-area:hover,
+        .photo-upload-area.has-image {
+            border-color: #E91E63;
+        }
+
+        .upload-icon {
+            width: 56px;
+            height: 56px;
+            background: #FCE4EC;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+        }
+
+        .upload-icon::before {
+            content: '📷';
+            font-size: 24px;
+        }
+
+        .upload-text {
+            color: #9E9E9E;
+            font-size: 0.9rem;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #E91E63 0%, #F48FB1 100%);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-submit:active {
+            opacity: 0.8;
+        }
+
+        /* 饮食分析页面 */
+        .analysis-page {
+            padding: 20px;
+        }
+
+        .analysis-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .analysis-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .analysis-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #C8E6C9 0%, #A5D6A7 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 20px;
+        }
+
+        .analysis-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* 营养平衡状态 */
+        .nutrition-balance {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .balance-score {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #2E7D32;
+            margin-bottom: 8px;
+        }
+
+        .balance-label {
+            font-size: 0.9rem;
+            color: #1B5E20;
+            margin-bottom: 12px;
+        }
+
+        .balance-status {
+            display: inline-block;
+            background: white;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #4CAF50;
+            font-weight: 600;
+        }
+
+        .nutrition-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .metric-item {
+            background: #FFF9F7;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .metric-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .metric-value-wrap {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #E91E63;
+        }
+
+        .metric-unit {
+            font-size: 0.75rem;
+            color: #9E9E9E;
+            margin-left: 4px;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: #757575;
+            margin-top: 4px;
+        }
+
+        .recommendation-box {
+            background: #FFF3E0;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .recommendation-title {
+            color: #E65100;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .recommendation-title::before {
+            content: '💡';
+            margin-right: 6px;
+        }
+
+        .recommendation-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .recommendation-list li {
+            color: #BF360C;
+            font-size: 0.85rem;
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .recommendation-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #FF9800;
+        }
+
+        /* 我的页面 */
+        .profile-page {
+            padding: 20px;
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, #FFE4E1 0%, #FCE4EC 100%);
+            border-radius: 20px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 100%);
+            border-radius: 50%;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-avatar::before {
+            content: '👩';
+            font-size: 32px;
+        }
+
+        .profile-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .profile-cycle {
+            font-size: 0.85rem;
+            color: #E91E63;
+        }
+
+        .menu-list {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #F0F0F0;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item:active {
+            background-color: #F9F9F9;
+        }
+
+        .menu-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 14px;
+            font-size: 1rem;
+        }
+
+        .menu-text {
+            flex: 1;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .menu-arrow {
+            color: #BDBDBD;
+            font-size: 0.8rem;
+        }
+
+        .disclaimer-box {
+            background: #FFF3E0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .disclaimer-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #E65100;
+            margin-bottom: 8px;
+        }
+
+        .disclaimer-text {
+            font-size: 0.8rem;
+            color: #BF360C;
+            line-height: 1.5;
+        }
+
+        /* 底部导航栏 */
+        .app-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 8px 0;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom));
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 15px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .nav-item:active {
+            transform: scale(0.95);
+        }
+
+        .nav-icon {
+            width: 28px;
+            height: 28px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-item.active .nav-icon {
+            opacity: 1;
+        }
+
+        .nav-text {
+            font-size: 0.65rem;
+            color: #9E9E9E;
+        }
+
+        .nav-item.active .nav-text {
+            color: #E91E63;
+            font-weight: 500;
+        }
+
+        /* 自定义底部导航图标 */
+        .nav-icon-home {
+            background: linear-gradient(135deg, #E91E63 0%, #F48FB1 100%);
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z'/%3E%3C/svg%3E") center/contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z'/%3E%3C/svg%3E") center/contain no-repeat;
+        }
+
+        .nav-icon-record {
+            background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%);
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z'/%3E%3C/svg%3E") center/contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z'/%3E%3C/svg%3E") center/contain no-repeat;
+        }
+
+        .nav-icon-analysis {
+            background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z'/%3E%3C/svg%3E") center/contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z'/%3E%3C/svg%3E") center/contain no-repeat;
+        }
+
+        .nav-icon-profile {
+            background: linear-gradient(135deg, #9C27B0 0%, #E1BEE7 100%);
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E") center/contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E") center/contain no-repeat;
+        }
+
+        .nav-item.active .nav-icon-home,
+        .nav-item.active .nav-icon-record,
+        .nav-item.active .nav-icon-analysis,
+        .nav-item.active .nav-icon-history,
+        .nav-item.active .nav-icon-profile {
+            opacity: 1;
+        }
+
+        .nav-icon-history {
+            background: linear-gradient(135deg, #607D8B 0%, #90A4AE 100%);
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z'/%3E%3C/svg%3E") center/contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z'/%3E%3C/svg%3E") center/contain no-repeat;
+        }
+
+        /* 历史记录页面 */
+        .history-page {
+            padding: 20px;
+        }
+
+        .week-selector {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .week-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .week-nav-btn {
+            width: 36px;
+            height: 36px;
+            background: #F5F5F5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
+        }
+
+        .week-nav-btn:active {
+            background: #E0E0E0;
+        }
+
+        .week-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .week-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .week-day {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 4px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .week-day:active {
+            background: #F5F5F5;
+        }
+
+        .week-day.today {
+            background: linear-gradient(135deg, #E91E63 0%, #F48FB1 100%);
+            color: white;
+        }
+
+        .week-day.today .day-name,
+        .week-day.today .day-num {
+            color: white;
+        }
+
+        .week-day.selected {
+            background: #E91E63;
+            color: white;
+        }
+
+        .week-day.selected .day-name,
+        .week-day.selected .day-num {
+            color: white;
+        }
+
+        .week-day.has-record {
+            position: relative;
+        }
+
+        .week-day.has-record::after {
+            content: '';
+            position: absolute;
+            bottom: 6px;
+            width: 4px;
+            height: 4px;
+            background: #E91E63;
+            border-radius: 50%;
+        }
+
+        .week-day.today.has-record::after {
+            background: white;
+        }
+
+        .day-name {
+            font-size: 0.7rem;
+            color: #9E9E9E;
+            margin-bottom: 4px;
+        }
+
+        .day-num {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .calendar-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            cursor: pointer;
+            color: #E91E63;
+            font-size: 0.85rem;
+            transition: opacity 0.2s ease;
+        }
+
+        .calendar-toggle:active {
+            opacity: 0.7;
+        }
+
+        .calendar-toggle::before {
+            content: '📅';
+            margin-right: 6px;
+        }
+
+        .calendar-toggle.collapsed::after {
+            content: '展开';
+            margin-left: 4px;
+        }
+
+        .calendar-toggle:not(.collapsed)::after {
+            content: '收起';
+            margin-left: 4px;
+        }
+
+        .calendar-container {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            max-height: 400px;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+
+        .calendar-container.collapsed {
+            max-height: 0;
+            padding: 0 16px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .calendar-nav-btn {
+            width: 36px;
+            height: 36px;
+            background: #F5F5F5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
+        }
+
+        .calendar-nav-btn:active {
+            background: #E0E0E0;
+        }
+
+        .calendar-month {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .weekday {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #9E9E9E;
+            padding: 8px 0;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            position: relative;
+        }
+
+        .calendar-day.other-month {
+            color: #E0E0E0;
+        }
+
+        .calendar-day.has-record {
+            background: #FCE4EC;
+            color: #E91E63;
+        }
+
+        .calendar-day.has-record::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            width: 4px;
+            height: 4px;
+            background: #E91E63;
+            border-radius: 50%;
+        }
+
+        .calendar-day.today {
+            background: linear-gradient(135deg, #E91E63 0%, #F48FB1 100%);
+            color: white;
+        }
+
+        .calendar-day.selected {
+            background: #E91E63;
+            color: white;
+            box-shadow: 0 2px 8px rgba(233, 30, 99, 0.3);
+        }
+
+        .calendar-day:hover:not(.other-month) {
+            background: #F5F5F5;
+        }
+
+        .calendar-day.today:hover,
+        .calendar-day.selected:hover {
+            opacity: 0.9;
+        }
+
+        .selected-date-info {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .selected-date-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        .no-record-message {
+            text-align: center;
+            padding: 30px 0;
+            color: #9E9E9E;
+            font-size: 0.9rem;
+        }
+
+        .no-record-message::before {
+            content: '🍽';
+            display: block;
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .day-meals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .day-meal-card {
+            background: #FFF9F7;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .day-meal-image {
+            width: 56px;
+            height: 56px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #FFECB3 0%, #FFE082 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .day-meal-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .day-meal-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .day-meal-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.85rem;
+        }
+
+        .day-meal-time {
+            font-size: 0.7rem;
+            color: #9E9E9E;
+        }
+
+        .day-meal-desc {
+            font-size: 0.75rem;
+            color: #757575;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* 响应式调整 */
+        @media (min-width: 768px) {
+            .app-container {
+                max-width: 420px;
+                margin: 0 auto;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部导航栏 -->
+        <header class="app-header">
+            <div class="header-icon"></div>
+            <h1 class="header-title" id="pageTitle">一日三餐</h1>
+            <div style="width: 32px;"></div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 首页 - 今日概览 -->
+            <div id="homePage" class="page-view active">
+                <div class="home-page">
+                    <div class="greeting-card">
+                        <h2 class="greeting-title">早安，小美</h2>
+                        <p class="greeting-subtitle">今天是第 12 天记录，继续加油！</p>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">3</div>
+                            <div class="stat-label">已记录</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">1,250</div>
+                            <div class="stat-label">卡路里</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">68</div>
+                            <div class="stat-label">蛋白质(g)</div>
+                        </div>
+                    </div>
+
+                    <div class="quick-actions">
+                        <div class="action-card" onclick="navigateTo('record')">
+                            <div class="action-icon orange">📷</div>
+                            <div class="action-content">
+                                <h4>记录饮食</h4>
+                                <p>快速添加餐食</p>
+                            </div>
+                        </div>
+                        <div class="action-card" onclick="navigateTo('analysis')">
+                            <div class="action-icon purple">📊</div>
+                            <div class="action-content">
+                                <h4>饮食分析</h4>
+                                <p>营养评估报告</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="today-meals">
+                        <h3 class="section-title">今日饮食</h3>
+                        <div class="meal-timeline">
+                            <div class="meal-item">
+                                <div class="meal-time-dot">07:30</div>
+                                <div class="meal-content">
+                                    <div class="meal-image"></div>
+                                    <div class="meal-info">
+                                        <div class="meal-title-row">
+                                            <span class="meal-title">早餐</span>
+                                            <span class="meal-tag">高蛋白</span>
+                                        </div>
+                                        <p class="meal-desc">燕麦牛奶、煮鸡蛋、草莓</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="meal-item">
+                                <div class="meal-time-dot">12:00</div>
+                                <div class="meal-content">
+                                    <div class="meal-image"></div>
+                                    <div class="meal-info">
+                                        <div class="meal-title-row">
+                                            <span class="meal-title">午餐</span>
+                                            <span class="meal-tag">低脂</span>
+                                        </div>
+                                        <p class="meal-desc">糙米饭、鸡胸肉、西兰花</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="meal-item">
+                                <div class="meal-time-dot">15:30</div>
+                                <div class="meal-content">
+                                    <div class="meal-image"></div>
+                                    <div class="meal-info">
+                                        <div class="meal-title-row">
+                                            <span class="meal-title">加餐</span>
+                                            <span class="meal-tag">健康</span>
+                                        </div>
+                                        <p class="meal-desc">坚果、低脂酸奶</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="meal-item" onclick="navigateTo('record')">
+                                <div class="meal-time-dot">18:30</div>
+                                <div class="meal-content" style="background: #F5F5F5;">
+                                    <div style="padding: 20px; text-align: center;">
+                                        <div style="font-size: 32px; margin-bottom: 8px;">+</div>
+                                        <p style="color: #BDBDBD; font-size: 0.8rem;">点击记录晚餐</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 记录页面 -->
+            <div id="recordPage" class="page-view">
+                <div class="record-page">
+                    <div class="record-form">
+                        <div class="form-group">
+                            <label class="form-label required">上传餐食照片</label>
+                            <div class="photo-upload-area" id="uploadArea" onclick="handlePhotoUpload()">
+                                <div class="upload-icon"></div>
+                                <p class="upload-text">点击上传或拍照</p>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">餐品内容</label>
+                            <textarea class="form-textarea" placeholder="描述您吃了什么..."></textarea>
+                        </div>
+
+                        <button class="btn-submit" onclick="saveRecord()">保存记录</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 饮食分析页面 -->
+            <div id="analysisPage" class="page-view">
+                <div class="analysis-page">
+                    <div class="analysis-card">
+                        <div class="analysis-header">
+                            <div class="analysis-icon">🍎</div>
+                            <h3 class="analysis-title">综合营养平衡状态</h3>
+                        </div>
+                        
+                        <div class="nutrition-balance">
+                            <div class="balance-score">85</div>
+                            <div class="balance-label">综合营养评分</div>
+                            <div class="balance-status">营养均衡</div>
+                        </div>
+
+                        <div class="nutrition-metrics">
+                            <div class="metric-item">
+                                <div class="metric-icon">🥚</div>
+                                <div class="metric-value-wrap">
+                                    <span class="metric-value">68</span>
+                                    <span class="metric-unit">g</span>
+                                </div>
+                                <div class="metric-label">蛋白质</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-icon">🍞</div>
+                                <div class="metric-value-wrap">
+                                    <span class="metric-value">156</span>
+                                    <span class="metric-unit">g</span>
+                                </div>
+                                <div class="metric-label">碳水化合物</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-icon">🥑</div>
+                                <div class="metric-value-wrap">
+                                    <span class="metric-value">42</span>
+                                    <span class="metric-unit">g</span>
+                                </div>
+                                <div class="metric-label">脂肪</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-icon">🥬</div>
+                                <div class="metric-value-wrap">
+                                    <span class="metric-value">28</span>
+                                    <span class="metric-unit">g</span>
+                                </div>
+                                <div class="metric-label">膳食纤维</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recommendation-box">
+                        <div class="recommendation-title">营养建议</div>
+                        <ul class="recommendation-list">
+                            <li>蛋白质摄入充足，继续保持</li>
+                            <li>建议增加膳食纤维摄入，可多吃绿叶蔬菜</li>
+                            <li>碳水化合物比例适中，建议选择粗粮</li>
+                            <li>脂肪摄入合理，注意选择健康脂肪</li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-card">
+                        <div class="analysis-header">
+                            <div class="analysis-icon">📈</div>
+                            <h3 class="analysis-title">今日摄入详情</h3>
+                        </div>
+                        <div style="font-size: 0.9rem; color: #666; line-height: 1.8;">
+                            <p><strong>早餐：</strong>燕麦牛奶(150ml)、煮鸡蛋(1个)、草莓(5颗)</p>
+                            <p><strong>午餐：</strong>糙米饭(100g)、鸡胸肉(150g)、西兰花(100g)</p>
+                            <p><strong>加餐：</strong>原味坚果(30g)、低脂酸奶(100ml)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 我的页面 -->
+            <div id="profilePage" class="page-view">
+                <div class="profile-page">
+                    <div class="profile-header">
+                        <div class="profile-avatar"></div>
+                        <h2 class="profile-name">小美</h2>
+                        <p class="profile-cycle">📅 距下次生理期还有 5 天</p>
+                    </div>
+
+                    <div class="menu-list">
+                        <div class="menu-item" onclick="navigateTo('analysis')">
+                            <div class="menu-icon" style="background: #E8F5E9;">🍎</div>
+                            <span class="menu-text">综合营养值</span>
+                            <span class="menu-arrow">›</span>
+                        </div>
+                        <div class="menu-item" onclick="navigateTo('history')">
+                            <div class="menu-icon" style="background: #FFF9F7;">📝</div>
+                            <span class="menu-text">饮食记录</span>
+                            <span class="menu-arrow">›</span>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-icon" style="background: #E1BEE7;">⚙️</div>
+                            <span class="menu-text">设置</span>
+                            <span class="menu-arrow">›</span>
+                        </div>
+                    </div>
+
+                    <div class="disclaimer-box">
+                        <div class="disclaimer-title">⚠️ 免责声明</div>
+                        <div class="disclaimer-text">本应用提供的健康管理建议仅供参考，不能替代专业医生的诊断。如有健康问题，请务必咨询专业医疗机构。</div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 20px; color: #BDBDBD; font-size: 0.8rem;">
+                        © 2024 一日三餐 - 女性健康管理
+                    </div>
+                </div>
+            </div>
+
+            <!-- 历史饮食记录页面 -->
+            <div id="historyPage" class="page-view">
+                <div class="history-page">
+                    <div class="week-selector">
+                        <div class="week-header">
+                            <div class="week-nav-btn" onclick="changeWeek(-1)">‹</div>
+                            <div class="week-title" id="weekTitle">4月第四周</div>
+                            <div class="week-nav-btn" onclick="changeWeek(1)">›</div>
+                        </div>
+                        <div class="week-days" id="weekDays"></div>
+                    </div>
+
+                    <div class="calendar-toggle" id="calendarToggle" onclick="toggleCalendar()">日历</div>
+
+                    <div class="calendar-container collapsed" id="calendarContainer">
+                        <div class="calendar-header">
+                            <div class="calendar-nav-btn" onclick="changeMonth(-1)">‹</div>
+                            <div class="calendar-month" id="calendarMonth">2026年4月</div>
+                            <div class="calendar-nav-btn" onclick="changeMonth(1)">›</div>
+                        </div>
+                        <div class="calendar-weekdays">
+                            <div class="weekday">日</div>
+                            <div class="weekday">一</div>
+                            <div class="weekday">二</div>
+                            <div class="weekday">三</div>
+                            <div class="weekday">四</div>
+                            <div class="weekday">五</div>
+                            <div class="weekday">六</div>
+                        </div>
+                        <div class="calendar-days" id="calendarDays"></div>
+                    </div>
+
+                    <div class="today-meals" id="todayMealsSection">
+                        <h3 class="section-title" id="selectedDateTitle">4月29日 饮食记录</h3>
+                        <div class="meal-timeline" id="dayMealsContent">
+                            <!-- 饮食记录通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部导航栏 -->
+        <footer class="app-footer">
+            <div class="nav-item active" id="navHome" onclick="navigateTo('home')">
+                <div class="nav-icon nav-icon-home"></div>
+                <span class="nav-text">首页</span>
+            </div>
+            <div class="nav-item" id="navHistory" onclick="navigateTo('history')">
+                <div class="nav-icon nav-icon-history"></div>
+                <span class="nav-text">历史</span>
+            </div>
+            <div class="nav-item" id="navRecord" onclick="navigateTo('record')">
+                <div class="nav-icon nav-icon-record"></div>
+                <span class="nav-text">记录</span>
+            </div>
+            <div class="nav-item" id="navAnalysis" onclick="navigateTo('analysis')">
+                <div class="nav-icon nav-icon-analysis"></div>
+                <span class="nav-text">分析</span>
+            </div>
+            <div class="nav-item" id="navProfile" onclick="navigateTo('profile')">
+                <div class="nav-icon nav-icon-profile"></div>
+                <span class="nav-text">我的</span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 存储上传的图片数据
+        let uploadedMealImage = null;
+        
+        // 当前选中的日期
+        let currentDate = new Date();
+        let selectedDate = new Date();
+        let currentWeekStart = null;
+        let calendarCollapsed = true;
+        
+        // 页面标题映射
+        const pageTitles = {
+            home: '一日三餐',
+            record: '记录饮食',
+            analysis: '饮食分析',
+            history: '历史记录',
+            profile: '我的'
+        };
+
+        // 模拟历史饮食记录数据
+        const mockMealRecords = {
+            '2026-04-25': [
+                { time: '07:30', title: '早餐', desc: '全麦面包、牛奶、鸡蛋', icon: '🍞', tag: '高纤维' },
+                { time: '12:00', title: '午餐', desc: '番茄炒蛋、米饭、青菜', icon: '🍅', tag: '维生素' },
+                { time: '18:30', title: '晚餐', desc: '清蒸鱼、西兰花、红薯', icon: '🐟', tag: '高蛋白' }
+            ],
+            '2026-04-26': [
+                { time: '08:00', title: '早餐', desc: '燕麦粥、香蕉、坚果', icon: '🌾', tag: '高纤维' },
+                { time: '12:30', title: '午餐', desc: '牛肉面、凉拌黄瓜', icon: '🍜', tag: '高蛋白' },
+                { time: '15:00', title: '加餐', desc: '酸奶、蓝莓', icon: '🥛', tag: '益生菌' },
+                { time: '19:00', title: '晚餐', desc: '蔬菜沙拉、鸡胸肉', icon: '🥗', tag: '低脂' }
+            ],
+            '2026-04-27': [
+                { time: '07:15', title: '早餐', desc: '豆浆、油条、咸菜', icon: '🥤', tag: '豆制品' },
+                { time: '12:00', title: '午餐', desc: '咖喱饭、蔬菜', icon: '🍛', tag: '碳水' }
+            ],
+            '2026-04-28': [
+                { time: '07:45', title: '早餐', desc: '三明治、咖啡', icon: '🥪', tag: '快捷' },
+                { time: '12:15', title: '午餐', desc: '炒面、紫菜蛋花汤', icon: '🍝', tag: '碳水' },
+                { time: '18:45', title: '晚餐', desc: '火锅', icon: '🍲', tag: '聚餐' }
+            ],
+            '2026-04-29': [
+                { time: '07:30', title: '早餐', desc: '燕麦牛奶、煮鸡蛋、草莓', icon: '🍳', tag: '高蛋白' },
+                { time: '12:00', title: '午餐', desc: '糙米饭、鸡胸肉、西兰花', icon: '🥗', tag: '低脂' },
+                { time: '15:30', title: '加餐', desc: '坚果、低脂酸奶', icon: '🥜', tag: '健康' }
+            ]
+        };
+
+        // 导航到指定页面
+        function navigateTo(pageName) {
+            // 隐藏所有页面
+            const pages = document.querySelectorAll('.page-view');
+            pages.forEach(page => page.classList.remove('active'));
+
+            // 显示目标页面
+            const targetPage = document.getElementById(pageName + 'Page');
+            if (targetPage) {
+                targetPage.classList.add('active');
+            }
+
+            // 更新导航栏状态
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
+
+            const targetNav = document.getElementById('nav' + pageName.charAt(0).toUpperCase() + pageName.slice(1));
+            if (targetNav) {
+                targetNav.classList.add('active');
+            }
+
+            // 更新页面标题
+            const titleElement = document.getElementById('pageTitle');
+            if (titleElement && pageTitles[pageName]) {
+                titleElement.textContent = pageTitles[pageName];
+            }
+
+            // 如果回到首页，更新今日饮食的第一张图片
+            if (pageName === 'home' && uploadedMealImage) {
+                updateFirstMealImage();
+            }
+
+            // 如果进入历史记录页面，初始化
+            if (pageName === 'history') {
+                currentWeekStart = getWeekStart(selectedDate);
+                renderWeekDays();
+                initCalendar();
+            }
+        }
+
+        // 处理照片上传
+        function handlePhotoUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            uploadArea.classList.add('has-image');
+            
+            // 生成一个模拟的食物图片（随机选择一个食物图标）
+            const foodIcons = ['🍳', '🍎', '🥗', '🍕', '🍔', '🥘', '🍣', '🥪', '🍝', '🍜'];
+            const randomIcon = foodIcons[Math.floor(Math.random() * foodIcons.length)];
+            
+            uploadedMealImage = randomIcon;
+            
+            uploadArea.innerHTML = `
+                <div style="font-size: 48px; margin-bottom: 8px;">${randomIcon}</div>
+                <p style="color: #4CAF50; font-size: 0.9rem;">照片已上传</p>
+            `;
+        }
+
+        // 更新首页今日饮食的第一张图片
+        function updateFirstMealImage() {
+            const firstMealImage = document.querySelector('.meal-timeline .meal-item:first-child .meal-image');
+            if (firstMealImage && uploadedMealImage) {
+                firstMealImage.innerHTML = `<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 28px;">${uploadedMealImage}</span>`;
+            }
+        }
+
+        // 保存记录
+        function saveRecord() {
+            const uploadArea = document.getElementById('uploadArea');
+            if (!uploadArea.classList.contains('has-image')) {
+                alert('请先上传餐食照片');
+                return;
+            }
+            
+            // 更新首页今日饮食的第一张图片
+            updateFirstMealImage();
+            
+            alert('记录保存成功！');
+            navigateTo('analysis');
+        }
+
+        // 日历功能
+
+        // 获取某天所在周的第一天（周日）
+        function getWeekStart(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            d.setDate(d.getDate() - day);
+            return d;
+        }
+
+        // 获取某天所在周的周数（相对于月份）
+        function getWeekOfMonth(date) {
+            const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+            const firstWeekStart = getWeekStart(firstDay);
+            const weekStart = getWeekStart(date);
+            const diffTime = weekStart - firstWeekStart;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return Math.floor(diffDays / 7) + 1;
+        }
+
+        // 渲染周视图
+        function renderWeekDays() {
+            const weekDays = document.getElementById('weekDays');
+            weekDays.innerHTML = '';
+            
+            if (!currentWeekStart) {
+                currentWeekStart = getWeekStart(selectedDate);
+            }
+            
+            const weekDayNames = ['日', '一', '二', '三', '四', '五', '六'];
+            const today = new Date();
+            
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(currentWeekStart);
+                d.setDate(d.getDate() + i);
+                
+                const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                const hasRecord = mockMealRecords[dateStr];
+                
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'week-day';
+                
+                if (hasRecord) {
+                    dayDiv.classList.add('has-record');
+                }
+                
+                // 检查是否是今天
+                if (today.getFullYear() === d.getFullYear() && 
+                    today.getMonth() === d.getMonth() && 
+                    today.getDate() === d.getDate()) {
+                    dayDiv.classList.add('today');
+                }
+                
+                // 检查是否是选中日期
+                if (selectedDate.getFullYear() === d.getFullYear() && 
+                    selectedDate.getMonth() === d.getMonth() && 
+                    selectedDate.getDate() === d.getDate()) {
+                    dayDiv.classList.add('selected');
+                }
+                
+                dayDiv.innerHTML = `
+                    <span class="day-name">${weekDayNames[i]}</span>
+                    <span class="day-num">${d.getDate()}</span>
+                `;
+                
+                dayDiv.onclick = function() {
+                    selectDate(d);
+                };
+                
+                weekDays.appendChild(dayDiv);
+            }
+            
+            // 更新周标题
+            const month = currentWeekStart.getMonth() + 1;
+            const weekNum = getWeekOfMonth(currentWeekStart);
+            document.getElementById('weekTitle').textContent = `${month}月第${weekNum}周`;
+        }
+
+        // 切换周
+        function changeWeek(delta) {
+            currentWeekStart = new Date(currentWeekStart);
+            currentWeekStart.setDate(currentWeekStart.getDate() + delta * 7);
+            renderWeekDays();
+        }
+
+        // 切换日历折叠状态
+        function toggleCalendar() {
+            calendarCollapsed = !calendarCollapsed;
+            const container = document.getElementById('calendarContainer');
+            const toggle = document.getElementById('calendarToggle');
+            
+            if (calendarCollapsed) {
+                container.classList.add('collapsed');
+                toggle.classList.add('collapsed');
+            } else {
+                container.classList.remove('collapsed');
+                toggle.classList.remove('collapsed');
+            }
+        }
+
+        // 初始化日历
+        function initCalendar() {
+            renderCalendar(currentDate);
+            showDayMeals(selectedDate);
+        }
+
+        // 渲染日历
+        function renderCalendar(date) {
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            
+            // 更新月份显示
+            document.getElementById('calendarMonth').textContent = `${year}年${month + 1}月`;
+            
+            // 获取当月第一天和最后一天
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const today = new Date();
+            
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+            
+            // 获取第一天是星期几
+            const startDay = firstDay.getDay();
+            
+            // 添加上个月的日期
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+            for (let i = startDay - 1; i >= 0; i--) {
+                const day = document.createElement('div');
+                day.className = 'calendar-day other-month';
+                day.textContent = prevMonthLastDay - i;
+                calendarDays.appendChild(day);
+            }
+            
+            // 添加当月日期
+            for (let i = 1; i <= lastDay.getDate(); i++) {
+                const day = document.createElement('div');
+                day.className = 'calendar-day';
+                
+                // 检查是否有记录
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                if (mockMealRecords[dateStr]) {
+                    day.classList.add('has-record');
+                }
+                
+                // 检查是否是今天
+                if (today.getFullYear() === year && today.getMonth() === month && today.getDate() === i) {
+                    day.classList.add('today');
+                }
+                
+                // 检查是否是选中日期
+                if (selectedDate.getFullYear() === year && selectedDate.getMonth() === month && selectedDate.getDate() === i) {
+                    day.classList.add('selected');
+                }
+                
+                day.textContent = i;
+                day.onclick = function() {
+                    selectDate(new Date(year, month, i));
+                };
+                
+                calendarDays.appendChild(day);
+            }
+            
+            // 添加下个月的日期
+            const remainingDays = 42 - (startDay + lastDay.getDate());
+            for (let i = 1; i <= remainingDays; i++) {
+                const day = document.createElement('div');
+                day.className = 'calendar-day other-month';
+                day.textContent = i;
+                calendarDays.appendChild(day);
+            }
+        }
+
+        // 选择日期
+        function selectDate(date) {
+            selectedDate = date;
+            renderCalendar(currentDate);
+            showDayMeals(date);
+        }
+
+        // 切换月份
+        function changeMonth(delta) {
+            currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + delta, 1);
+            renderCalendar(currentDate);
+        }
+
+        // 显示某天的饮食记录
+        function showDayMeals(date) {
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const day = date.getDate();
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+            // 更新标题
+            const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+            const weekDayNames = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            const title = `${year}年${month + 1}月${day}日 ${weekDayNames[date.getDay()]} 饮食记录`;
+            document.getElementById('selectedDateTitle').textContent = title;
+
+            // 更新内容 - 使用与首页相同的meal-timeline结构
+            const contentDiv = document.getElementById('dayMealsContent');
+            const records = mockMealRecords[dateStr];
+
+            if (records && records.length > 0) {
+                let html = '';
+                records.forEach(meal => {
+                    html += `
+                        <div class="meal-item">
+                            <div class="meal-time-dot">${meal.time}</div>
+                            <div class="meal-content">
+                                <div class="meal-image" style="display:flex;align-items:center;justify-content:center;font-size:24px;">${meal.icon}</div>
+                                <div class="meal-info">
+                                    <div class="meal-title-row">
+                                        <span class="meal-title">${meal.title}</span>
+                                        <span class="meal-tag">${meal.tag}</span>
+                                    </div>
+                                    <p class="meal-desc">${meal.desc}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                contentDiv.innerHTML = html;
+            } else {
+                contentDiv.innerHTML = '<div class="no-record-message">暂无饮食记录</div>';
+            }
+        }
+
+        // 页面加载完成后初始化日历
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置今天为选中日期
+            selectedDate = new Date();
+            currentDate = new Date();
+        });
+    </script>
+</body>
+</html>
